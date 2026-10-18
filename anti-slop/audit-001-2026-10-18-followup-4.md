@@ -1,6 +1,6 @@
 # Tindak lanjut audit-001 batch D (B-05, B-06, B-12, B-17)
 
-Tanggal: 2026-10-18. Status: SELESAI, semua verifikasi hijau. Commit: (menunggu keputusan).
+Tanggal: 2026-10-18. Status: SELESAI, semua verifikasi hijau. Commit: d180d69 (sudah push ke main).
 
 A-06 (dark mode) tidak dikerjakan sesuai keputusan pemilik proyek: "tidak butuh darkmode untuk saat ini".
 Tidak ada temuan lain yang disentuh (B-04, B-07..B-16 tetap seperti semula).
