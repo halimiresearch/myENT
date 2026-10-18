@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
@@ -146,10 +146,13 @@ export class AuthService {
     return { ok: true };
   }
 
-  async resetPassword(actor: { id: string; role: string; division: string }, targetId: string) {    const temp = randomBytes(9).toString('base64url'); // ~12 char, sekali tampil — PRD §6.2
+  async resetPassword(actor: { id: string; role: string; division: string }, targetId: string) {
+    const temp = randomBytes(9).toString('base64url'); // ~12 char, sekali tampil — PRD §6.2
     const passwordHash = await bcrypt.hash(temp, 10);
     await this.prisma.$transaction(async (tx: any) => {
-      const before = await tx.user.findUniqueOrThrow({ where: { id: targetId } });
+      // B-06: id tak dikenal → 404 eksplisit, bukan 500 dari findUniqueOrThrow.
+      const before = await tx.user.findUnique({ where: { id: targetId } });
+      if (!before) throw new NotFoundException('User tidak ditemukan');
       // Anti-eskalasi: ADMIN hanya oleh ADMIN; officer hanya se-divisi (diri sendiri boleh).
       if (before.role === 'ADMIN' && actor.role !== 'ADMIN')
         throw new ForbiddenException('Hanya ADMIN dapat mereset ADMIN');

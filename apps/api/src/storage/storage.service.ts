@@ -19,6 +19,9 @@ export function baseFromReq(req: any): string {
   return `${req.protocol}://${req.get('host')}`;
 }
 
+// Ekstensi key dari mime: writer baru selalu menyertakan ekstensi agar Content-Type lokal benar (B-17).
+export const extFor = (contentType: string) => (contentType === 'application/pdf' ? '.pdf' : '.jpg');
+
 @Injectable()
 export class StorageService {
   private driver = process.env.STORAGE_DRIVER ?? 'local';
@@ -86,6 +89,7 @@ export class StorageService {
   }
 
   // Content-Type untuk driver lokal: dari ekstensi key (key dibuat server, bukan client).
+  // Fallback image/jpeg = key lama tanpa ekstensi (data pra-B-17, sengaja tanpa migrasi).
   static contentTypeFor(key: string) {
     if (key.endsWith('.pdf')) return 'application/pdf';
     if (key.endsWith('.png')) return 'image/png';

@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { canManageMember } from '../common/policy';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
-import { StorageService } from '../storage/storage.service';
+import { StorageService, extFor } from '../storage/storage.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { OrgConfigService } from '../config/org-config.service';
 import { detectImage } from '../attendance/attendance.rules';
@@ -53,7 +53,7 @@ export class AbsenceService {
         assertPdf(file);
         mime = 'application/pdf';
       } else throw new BadRequestException('Lampiran harus foto/PDF');
-      attachmentObjectKey = `attachments/${meetingId}/${userId}/${randomUUID()}`;
+      attachmentObjectKey = `attachments/${meetingId}/${userId}/${randomUUID()}${extFor(mime)}`;
       await this.storage.save(attachmentObjectKey, file, mime);
     } else if (required[reasonType]) {
       throw new BadRequestException('Lampiran wajib untuk alasan ini');

@@ -183,3 +183,12 @@
   di tick), `tryTickLock()/unlockTick()` (@deprecated, nol caller; lock benar = xact di tick).
 - BFF allowlist pindah ke `lib/allowlist.ts` + `allowlist.test.ts` (regresi announcements
   tak terulang); forward buffer body sekali (retry tak baca ulang).
+
+## Remediasi audit-001 batch D (2026-10-18)
+- B-12: `FILE_HMAC_SECRET`/`QR_HMAC_SECRET` WAJIB di production (boot menolak bila kosong/< 32);
+  fallback JWT_SECRET hanya jalur dev lokal. `.env.prod.example` + compose memaksa isi.
+- B-05: pool `pg` dibuat di constructor `PrismaService` (setelah ConfigModule memuat `.env`);
+  pool ditutup saat destroy.
+- B-17: key storage baru selalu ber-ekstensi (`.pdf`/`.jpg`); key lama tanpa ekstensi tetap
+  dilayani `image/jpeg` (tanpa migrasi data). Endpoint baru `GET /assignments/:id/file`.
+- B-06: input salah bentuk → 4xx (bukan 500); import CSV balapan melaporkan baris gagal jujur.

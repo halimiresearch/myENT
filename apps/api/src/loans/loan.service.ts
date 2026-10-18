@@ -76,6 +76,9 @@ export class LoanService {
   }
 
   async listItems(status?: string) {
+    // B-06: string bebas → 400, bukan 500 dari enum Prisma.
+    if (status && !['AVAILABLE', 'BORROWED', 'MAINTENANCE'].includes(status))
+      throw new BadRequestException('Status tidak valid');
     return this.prisma.item.findMany({
       where: status ? { status: status as any } : {},
       orderBy: { name: 'asc' },

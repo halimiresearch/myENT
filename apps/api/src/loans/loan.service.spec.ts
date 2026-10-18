@@ -1,4 +1,4 @@
-import { ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { LoanService } from './loan.service';
 
 function makeSvc(loan: any, borrower: any) {
@@ -42,5 +42,21 @@ describe('loan.service - scope returnLoan (B-01.4)', () => {
     (svc as any).cleanPhoto = jest.fn().mockResolvedValue(Buffer.from('clean'));
     const r = await svc.returnLoan({ id: 'mb1', role: 'OFFICER', division: 'Jurnalistik' }, 'l1', Buffer.from('x'), '', false);
     expect(r.status).toBe('RETURNED');
+  });
+});
+
+describe('loan.service - filter status items (B-06)', () => {
+  it('status tak dikenal → 400 dan tidak menyentuh DB', async () => {
+    const prisma: any = { item: { findMany: jest.fn().mockResolvedValue([]) } };
+    const svc = new LoanService(prisma, {} as any, {} as any, {} as any, {} as any);
+    await expect(svc.listItems('NGAWUR')).rejects.toThrow(BadRequestException);
+    expect(prisma.item.findMany).not.toHaveBeenCalled();
+  });
+
+  it('status valid → filter diteruskan', async () => {
+    const prisma: any = { item: { findMany: jest.fn().mockResolvedValue([]) } };
+    const svc = new LoanService(prisma, {} as any, {} as any, {} as any, {} as any);
+    await svc.listItems('AVAILABLE');
+    expect(prisma.item.findMany).toHaveBeenCalledWith({ where: { status: 'AVAILABLE' }, orderBy: { name: 'asc' } });
   });
 });

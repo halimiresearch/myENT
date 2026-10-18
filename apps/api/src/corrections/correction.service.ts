@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { AttendanceService } from '../attendance/attendance.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { StorageService } from '../storage/storage.service';
+import { StorageService, extFor } from '../storage/storage.service';
 import { OrgConfigService } from '../config/org-config.service';
 import { detectImage } from '../attendance/attendance.rules';
 import { isPdf } from '../materials/materials.service';
@@ -48,7 +48,7 @@ export class CorrectionService {
         assertPdf(file);
         mime = 'application/pdf';
       } else throw new BadRequestException('Bukti harus foto/PDF');
-      attachmentObjectKey = `corrections/${meetingId}/${userId}/${randomUUID()}`;
+      attachmentObjectKey = `corrections/${meetingId}/${userId}/${randomUUID()}${extFor(mime)}`;
       await this.storage.save(attachmentObjectKey, file, mime);
     }
     try {

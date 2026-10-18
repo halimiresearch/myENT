@@ -15,7 +15,7 @@ class CreateUserDto {
   @IsString() @MinLength(3) @MaxLength(32) nim!: string;
   @IsString() @MinLength(3) @MaxLength(100) name!: string;
   @IsString() @MinLength(10) @MaxLength(128) password!: string;
-  @IsString() @IsOptional() role?: 'MEMBER' | 'OFFICER' | 'ADMIN';
+  @IsIn(['MEMBER', 'OFFICER', 'ADMIN']) @IsOptional() role?: 'MEMBER' | 'OFFICER' | 'ADMIN';
   @IsString() @IsOptional() division?: string;
   @IsEmail() @IsOptional() email?: string;
   @IsInt() @IsOptional() @Type(() => Number) cohortYear?: number;
@@ -38,7 +38,7 @@ class UpdateUserDto {
 }
 
 class ImportDto {
-  @IsString() @MaxLength(200_000) csv!: string;
+  @IsString() @MaxLength(30_000) csv!: string; // >30k = 400 validasi, bukan 413 body-parser (B-17)
 }
 
 class BulkDeactivateDto {
@@ -67,27 +67,37 @@ export class UsersController {
     // Officer menambah ke divisinya sendiri (tanpa ini member yatim di luar scope).
     const division = req.user.role === 'ADMIN' ? (dto.division ?? '') : req.user.division;
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    const user = await this.prisma.$transaction(async (tx: any) => {
-      const u = await tx.user.create({
-        data: {
-          nim: dto.nim,
-          name: dto.name,
-          passwordHash,
-          role: (dto.role as any) ?? 'MEMBER',
-          division,
-          email: dto.email ?? null,
-          cohortYear: dto.cohortYear ?? 0,
-        },
+    let user;
+    try {
+      user = await this.prisma.$transaction(async (tx: any) => {
+        const u = await tx.user.create({
+          data: {
+            nim: dto.nim,
+            name: dto.name,
+            passwordHash,
+            role: (dto.role as any) ?? 'MEMBER',
+            division,
+            email: dto.email ?? null,
+            cohortYear: dto.cohortYear ?? 0,
+          },
+        });
+        await this.audit.log({
+          actorId: req.user.id,
+          action: 'user.create',
+          entity: 'User',
+          entityId: u.id,
+          newValue: { nim: u.nim, role: u.role } as any,
+        }, tx);
+        return u;
       });
-      await this.audit.log({
-        actorId: req.user.id,
-        action: 'user.create',
-        entity: 'User',
-        entityId: u.id,
-        newValue: { nim: u.nim, role: u.role } as any,
-      }, tx);
-      return u;
-    });
+    } catch (e: any) {
+      // B-06: NIM duplikat (termasuk balapan) → 409, bukan 500.
+      if (e?.code === 'P2002') {
+        const { ConflictException } = await import('@nestjs/common');
+        throw new ConflictException('NIM sudah terdaftar');
+      }
+      throw e;
+    }
     const { passwordHash: _, ...safe } = user;
     return safe;
   }
@@ -190,7 +200,7 @@ export class UsersController {
       return { r, temp, hash: await bcrypt.hash(temp, 10) };
     }));
     if (hashed.length) {
-      await this.prisma.user.createMany({
+      const { count } = await this.prisma.user.createMany({
         data: hashed.map(({ r, hash }) => ({
           nim: r.nim, name: r.name,
           // Scope divisi (AGENTS §6): officer selalu ke divisinya sendiri, apa pun isi CSV.
@@ -200,11 +210,22 @@ export class UsersController {
         })),
         skipDuplicates: true, // balapan import konkuren: baris tabrakan dilewati, tak 500.
       });
+      // B-06: audit pakai count nyata (bukan panjang batch) + laporan per baris jujur.
       await this.audit.log({
         actorId: req.user.id, action: 'user.import', entity: 'User',
-        entityId: `${hashed.length} via csv`, newValue: { count: hashed.length } as any,
+        entityId: `${count} via csv`, newValue: { count } as any,
       });
-      for (const { r, temp } of hashed) results.push({ nim: r.nim, status: 'ok', temporaryPassword: temp });
+      // Baris yang kalah balapan di-skip; hash tersimpan beda dari hash kita → password tampil tak berlaku.
+      const stored = new Map(
+        (await this.prisma.user.findMany({
+          where: { nim: { in: hashed.map(({ r }) => r.nim) } },
+          select: { nim: true, passwordHash: true },
+        })).map((u) => [u.nim, u.passwordHash]),
+      );
+      for (const { r, temp, hash } of hashed) {
+        if (stored.get(r.nim) === hash) results.push({ nim: r.nim, status: 'ok', temporaryPassword: temp });
+        else results.push({ nim: r.nim, status: 'failed', reason: 'NIM duplikat (balapan import)' });
+      }
     }
     return { total: results.length, results };
   }

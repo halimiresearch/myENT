@@ -1,16 +1,17 @@
 import { Body, Controller, Delete, Get, Patch, Param, ParseUUIDPipe, Post, Query, Req, UseGuards } from '@nestjs/common';
-import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
 import { NotificationsService } from './notifications.service';
 import { AuditService } from '../audit/audit.service';
 import { JwtAuthGuard } from '../common/jwt-auth.guard';
 import { RolesGuard } from '../common/roles.guard';
 import { Roles } from '../common/roles.decorator';
 
-class PageQuery {
+export class PageQuery {
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number = 1;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit?: number = 20;
-  @IsOptional() @Type(() => Boolean) unreadOnly?: boolean;
+  // B-17: Boolean('false') = true; query string dikonversi eksplisit, nilai asing ditolak validasi.
+  @IsOptional() @Transform(({ value }) => (value === 'true' ? true : value === 'false' ? false : value)) @IsBoolean() unreadOnly?: boolean;
 }
 
 class DeviceDto {

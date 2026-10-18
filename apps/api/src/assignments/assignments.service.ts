@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, GoneException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { StorageService } from '../storage/storage.service';
+import { StorageService, extFor } from '../storage/storage.service';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { OrgConfigService } from '../config/org-config.service';
@@ -44,7 +44,7 @@ export class AssignmentsService {
         assertPdf(file);
         mime = 'application/pdf';
       } else throw new BadRequestException('Lampiran harus PDF/foto');
-      attachmentKey = `assignments/${randomUUID()}`;
+      attachmentKey = `assignments/${randomUUID()}${extFor(mime)}`;
       await this.storage.save(attachmentKey, file, mime);
     }
     let a;
@@ -89,7 +89,7 @@ export class AssignmentsService {
       assertPdf(file);
       mime = 'application/pdf';
     } else throw new BadRequestException('File harus PDF/foto');
-    const key = `submissions/${assignmentId}/${userId}/${randomUUID()}`;
+    const key = `submissions/${assignmentId}/${userId}/${randomUUID()}${extFor(mime)}`;
     await this.storage.save(key, file, mime);
     const now = new Date();
     const prev = await this.prisma.submission.findUnique({ where: { assignmentId_userId: { assignmentId, userId } } });
@@ -173,5 +173,13 @@ export class AssignmentsService {
     }
     if (s.fileDeletedAt) throw new GoneException('File sudah dihapus');
     return { url: await this.storage.signedUrl(s.objectKey, baseUrl) };
+  }
+
+  // B-17: unduh lampiran tugas (brief). Materi internal — semua role yang login boleh baca.
+  async attachmentUrl(id: string, baseUrl: string) {
+    const a = await this.prisma.assignment.findUnique({ where: { id } });
+    if (!a) throw new NotFoundException('Tidak ditemukan');
+    if (!a.attachmentKey) throw new NotFoundException('Tidak ada lampiran');
+    return { url: await this.storage.signedUrl(a.attachmentKey, baseUrl) };
   }
 }

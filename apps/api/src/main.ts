@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 import { SensitiveThrottleMiddleware } from './common/sensitive-throttle.middleware';
+import { requireFileSecret, requireQrSecret } from './common/jwt-secret';
 
 async function bootstrap() {
   // Gagal cepat bila secret lemah di production (dev fallback hanya untuk lokal).
@@ -13,6 +14,9 @@ async function bootstrap() {
     if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL wajib di production');
     if ((process.env.TOTP_ENC_KEY ?? '').length < 32)
       throw new Error('TOTP_ENC_KEY minimal 32 karakter di production (secret 2FA wajib terenkripsi)');
+    // B-12: kunci HMAC file/QR wajib terpisah di production (tanpa fallback JWT_SECRET).
+    requireFileSecret();
+    requireQrSecret();
   }
   const app = await NestFactory.create(AppModule);
   app.getHttpAdapter().getInstance().set('trust proxy', 1);

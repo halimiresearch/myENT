@@ -72,4 +72,10 @@ export class AssignmentsController {
   file(@Req() req: any, @Param('id', ParseUUIDPipe) id: string) {
     return this.assignments.fileUrl(req.user, id, baseFromReq(req));
   }
+
+  @Roles('MEMBER', 'OFFICER', 'ADMIN')
+  @Get('assignments/:id/file')
+  assignmentFile(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    return this.assignments.attachmentUrl(id, baseFromReq(req));
+  }
 }
