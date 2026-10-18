@@ -95,7 +95,7 @@ describe('hardening concurrency (e2e)', () => {
     const mem = await prisma.user.findUniqueOrThrow({ where: { nim: memNim } });
     const title = `Remind ${uniq()}`;
     // Window terbuka sekarang + tutup 10 mnt lagi → kedua reminder menyala.
-    await mkMeeting(off, title, -600_1000, 600_1000);
+    await mkMeeting(off, title, -600_000, 600_000);
     await Promise.all([svc.tick(), svc.tick()]);
     expect(
       await prisma.notification.count({ where: { userId: mem.id, type: 'attendance-opened', title: { contains: title } } }),
