@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/client';
-import { Btn, Card, Empty, Err, PageHeader, Pager, StatusPill, Thead, field } from '@/lib/ui';
+import { Btn, Card, Empty, Err, Loading, PageHeader, Pager, StatusPill, Thead, field } from '@/lib/ui';
 
 const dt = (s: string) => new Date(s).toLocaleString('id-ID');
 const LIMIT = 20;
@@ -12,6 +12,7 @@ export default function Meetings() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [err, setErr] = useState('');
+  const [first, setFirst] = useState(true);
   const [form, setForm] = useState({ title: '', startAt: '', endAt: '', openAt: '', closeAt: '' });
   const load = (p = page) => {
     setErr('');
@@ -21,7 +22,8 @@ export default function Meetings() {
         setTotal(r.total);
         setPage(p);
       })
-      .catch((e) => setErr(e.message));
+      .catch((e) => setErr(e.message))
+      .finally(() => setFirst(false));
   };
   useEffect(() => {
     load(1);
@@ -71,7 +73,7 @@ export default function Meetings() {
         </form>
       </Card>
       <Card className="p-4">
-        {rows.length === 0 ? <Empty /> : (
+        {first ? <Loading /> : rows.length === 0 ? <Empty /> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <Thead cols={['Judul', 'Mulai', 'Status', 'Aksi']} />
@@ -86,7 +88,7 @@ export default function Meetings() {
                         {m.status === 'DRAFT' && <button className="font-medium text-emerald-700 hover:text-emerald-900" onClick={() => act(m.id, '', 'PATCH', { status: 'PUBLISHED' })}>Publish</button>}
                         {m.status !== 'CANCELLED' && <button className="font-medium text-rose-600 hover:text-rose-800" onClick={() => confirm('Batalkan?') && act(m.id, '', 'PATCH', { status: 'CANCELLED' })}>Batal</button>}
                         <button className="font-medium text-gray-500 hover:text-gray-700" onClick={() => { const s = prompt('Mulai duplikat (YYYY-MM-DDTHH:mm)', m.startAt.slice(0, 16)); if (s) act(m.id, '/duplicate', 'POST', { startAt: new Date(s).toISOString() }); }}>Duplikat</button>
-                        <button className="font-medium text-gray-400 hover:text-gray-600" onClick={() => confirm(`Hapus ${m.title}?`) && act(m.id, '', 'DELETE')}>Hapus</button>
+                        <button className="font-medium text-gray-500 hover:text-gray-600" onClick={() => confirm(`Hapus ${m.title}?`) && act(m.id, '', 'DELETE')}>Hapus</button>
                       </span>
                     </td>
                   </tr>

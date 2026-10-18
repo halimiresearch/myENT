@@ -28,7 +28,7 @@ export function Stat({ icon, label, value, sub, tone = 'brand' }: {
         <span className="text-xs font-medium">{label}</span>
       </div>
       <div className="mt-2 text-2xl font-bold tracking-tight">{value}</div>
-      {sub && <div className="mt-1 text-xs text-gray-400">{sub}</div>}
+      {sub && <div className="mt-1 text-xs text-gray-500">{sub}</div>}
     </div>
   );
 }
@@ -78,7 +78,7 @@ export function PageHeader({ title, sub, actions }: { title: string; sub?: strin
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 className="text-xl font-bold tracking-tight">{title}</h1>
-        {sub && <p className="mt-0.5 text-sm text-gray-500">{sub}</p>}
+        {sub && <p className="mt-0.5 text-sm text-gray-600">{sub}</p>}
       </div>
       {actions && <div className="flex gap-2">{actions}</div>}
     </div>
@@ -97,12 +97,13 @@ export function Btn({ children, href, primary, onClick, disabled }: {
     : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50';
   const c = `inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium transition disabled:opacity-50 ${cls}`;
   if (href) return <a href={href} className={c}>{children}</a>;
-  return <button type="button" onClick={onClick} disabled={disabled} className={c}>{children}</button>;
+  // Tanpa onClick (mis. tombol submit form) → biarkan tombol browser default (submit).
+  return <button type={onClick ? 'button' : 'submit'} onClick={onClick} disabled={disabled} className={c}>{children}</button>;
 }
 
 // Kelas input standar — pakai untuk input/select/textarea.
 export const field =
-  'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none placeholder:text-gray-400 focus:border-brand-200 focus:ring-2 focus:ring-brand-100 disabled:opacity-50';
+  'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none placeholder:text-gray-500 focus:border-brand-200 focus:ring-2 focus:ring-brand-100 disabled:opacity-50';
 
 // Pil status domain — satu pemetaan untuk semua halaman.
 const STATUS_TONES: Record<string, 'green' | 'amber' | 'red' | 'brand' | 'gray'> = {
@@ -120,7 +121,7 @@ export function StatusPill({ value }: { value: string }) {
 export function Thead({ cols }: { cols: string[] }) {
   return (
     <thead>
-      <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-400">
+      <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-500">
         {cols.map((c, i) => <th key={c} className={`py-2 pr-2 font-medium ${i === 0 ? 'pl-1' : ''}`}>{c}</th>)}
       </tr>
     </thead>
@@ -139,7 +140,7 @@ export function Pager({ page, total, limit, onPage }: { page: number; total: num
       <button aria-label="Halaman sebelumnya" className={`${btn} border border-gray-200 bg-white hover:bg-gray-50`} disabled={page <= 1} onClick={() => onPage(page - 1)}>‹</button>
       {nums.map((n, i) => (
         <span key={n} className="flex items-center gap-1">
-          {i > 0 && n - nums[i - 1] > 1 && <span className="text-gray-400">…</span>}
+          {i > 0 && n - nums[i - 1] > 1 && <span className="text-gray-500">…</span>}
           <button
             aria-label={`Halaman ${n}`}
             aria-current={n === page ? 'page' : undefined}
@@ -154,7 +155,7 @@ export function Pager({ page, total, limit, onPage }: { page: number; total: num
 }
 
 export function Empty({ text = 'Belum ada data' }: { text?: string }) {
-  return <p className="text-gray-400 text-sm py-8 text-center">{text}</p>;
+  return <p className="text-gray-500 text-sm py-8 text-center">{text}</p>;
 }
 
 export function Loading({ text = 'Memuat…' }: { text?: string }) {
@@ -163,7 +164,7 @@ export function Loading({ text = 'Memuat…' }: { text?: string }) {
       {[0, 1, 2].map((i) => (
         <div key={i} className="h-9 animate-pulse rounded-xl bg-gray-100" />
       ))}
-      <p className="text-center text-xs text-gray-400">{text}</p>
+      <p className="text-center text-xs text-gray-500">{text}</p>
     </div>
   );
 }

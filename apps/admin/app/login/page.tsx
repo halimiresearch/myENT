@@ -133,7 +133,7 @@ export default function Login() {
     }
   }
 
-  const input = 'w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm outline-none placeholder:text-gray-400 focus:border-brand-200 focus:ring-2 focus:ring-brand-100';
+  const input = 'w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm outline-none placeholder:text-gray-500 focus:border-brand-200 focus:ring-2 focus:ring-brand-100';
   const btn = 'w-full rounded-xl bg-brand-700 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-800 disabled:opacity-50';
 
   return (
@@ -175,7 +175,7 @@ export default function Login() {
                 />
                 <button
                   type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Sembunyikan password' : 'Tampilkan password'}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-600"
                 >
                   {show ? (
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="size-5" aria-hidden><path d="M3 3l18 18" /><path d="M10.6 5.1A9.8 9.8 0 0112 5c7 0 10 7 10 7a17 17 0 01-2.9 3.6M6.6 6.6A16.6 16.6 0 002 12s3 7 10 7a9.6 9.6 0 004.4-1.1" /><path d="M9.9 9.9a3 3 0 004.2 4.2" /></svg>

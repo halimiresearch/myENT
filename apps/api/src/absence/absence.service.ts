@@ -29,7 +29,7 @@ export class AbsenceService {
     if (!m || m.status === 'DRAFT') throw new NotFoundException('Meeting tidak ditemukan');
     if (m.status === 'CANCELLED') throw new BadRequestException('Kegiatan dibatalkan');
     if (new Date() > m.attendanceCloseAt)
-      throw new BadRequestException('Batas pengajuan lewat — hubungi pengurus');
+      throw new BadRequestException('Batas pengajuan lewat. Hubungi pengurus');
     const att = await this.prisma.attendance.findUnique({ where: { userId_meetingId: { userId, meetingId } } });
     if (att?.status === 'PRESENT') throw new ConflictException('Sudah presensi'); // BR-15
     // Kuota izin per semester, bila diaktifkan (backlog §22.3; default tanpa batas).

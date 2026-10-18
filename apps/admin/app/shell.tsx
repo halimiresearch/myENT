@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
 function I({ children }: { children: ReactNode }) {
@@ -94,6 +94,28 @@ export default function Shell({ children }: { children: ReactNode }) {
     }).catch(() => {});
   }, []);
 
+  const drawerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const el = drawerRef.current;
+    const focusables = () => el ? Array.from(el.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input')) : [];
+    const prev = document.activeElement as HTMLElement | null;
+    focusables()[0]?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') return setOpen(false);
+      if (e.key !== 'Tab') return;
+      const f = focusables();
+      if (!f.length) return;
+      if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      prev?.focus();
+    };
+  }, [open]);
+
   const groups = useMemo(() => {
     const needle = q.trim().toLowerCase();
     if (!needle) return NAV;
@@ -113,24 +135,24 @@ export default function Shell({ children }: { children: ReactNode }) {
         </span>
         <span className="leading-tight">
           <span className="block text-sm font-bold">Jurnalistik</span>
-          <span className="block text-[11px] text-gray-400">Admin Panel</span>
+          <span className="block text-[11px] text-gray-500">Admin Panel</span>
         </span>
       </Link>
       <label className="relative mt-4 block">
-        <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
+        <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="size-4" aria-hidden><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
         </span>
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Cari menu…"
-          className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm outline-none placeholder:text-gray-400 focus:border-brand-200 focus:bg-white focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm outline-none placeholder:text-gray-500 focus:border-brand-200 focus:bg-white focus:ring-2 focus:ring-brand-100"
         />
       </label>
       <nav aria-label="Navigasi utama" className="mt-4 flex-1 space-y-5 overflow-y-auto pb-2">
         {groups.map((g) => (
           <div key={g.group}>
-            <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{g.group}</p>
+            <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500">{g.group}</p>
             <ul className="mt-1 space-y-0.5">
               {g.items.map((i) => {
                 const active = isActive(path, i.href);
@@ -152,7 +174,7 @@ export default function Shell({ children }: { children: ReactNode }) {
             </ul>
           </div>
         ))}
-        {!groups.length && <p className="px-2 text-sm text-gray-400">Menu tidak ditemukan.</p>}
+        {!groups.length && <p className="px-2 text-sm text-gray-500">Menu tidak ditemukan.</p>}
       </nav>
       <div className="mt-2 flex items-center gap-2.5 rounded-xl bg-gray-50 px-2.5 py-2.5">
         <span aria-hidden className="grid place-items-center size-8 rounded-full bg-brand-100 text-xs font-bold text-brand-700">
@@ -160,7 +182,7 @@ export default function Shell({ children }: { children: ReactNode }) {
         </span>
         <span className="min-w-0 leading-tight">
           <span className="block truncate text-sm font-semibold">{me ?? 'Pengurus'}</span>
-          <span className="block text-[11px] text-gray-400">UKM Jurnalistik</span>
+          <span className="block text-[11px] text-gray-500">UKM Jurnalistik</span>
         </span>
       </div>
     </div>
@@ -177,7 +199,7 @@ export default function Shell({ children }: { children: ReactNode }) {
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/30" onClick={() => setOpen(false)} aria-hidden />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-white p-4 shadow-xl" aria-label="Sidebar seluler">
+          <aside ref={drawerRef} role="dialog" aria-modal="true" className="absolute inset-y-0 left-0 w-72 bg-white p-4 shadow-xl" aria-label="Sidebar seluler">
             {sidebar}
           </aside>
         </div>
@@ -189,7 +211,7 @@ export default function Shell({ children }: { children: ReactNode }) {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="size-5" aria-hidden><path d="M4 7h16M4 12h16M4 17h16" /></svg>
             </button>
             <p className="text-sm font-semibold">{TITLES[path] ?? 'Admin'}</p>
-            <p className="ml-auto hidden text-xs text-gray-400 sm:block">
+            <p className="ml-auto hidden text-xs text-gray-600 sm:block">
               {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>

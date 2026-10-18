@@ -81,7 +81,7 @@ export class AuthService {
     // 2FA aktif → challenge one-time 5 menit (KURANG.md §4). pendingToken = id challenge (opaque).
     if (user.totpEnabled && user.totpSecret) {
       const c = await this.prisma.twoFaChallenge.create({
-        data: { userId: user.id, expiresAt: new Date(Date.now() + 5 * 60_1000) },
+        data: { userId: user.id, expiresAt: new Date(Date.now() + 5 * 60_000) },
       });
       return { twoFactorRequired: true, pendingToken: c.id };
     }
@@ -278,7 +278,7 @@ export class AuthService {
         });
         if (cur.attempts >= 5) keepConsumed = true;
         await this.registerFailedLogin(user.id);
-        throw new UnauthorizedException(keepConsumed ? 'Terlalu banyak salah — login ulang' : 'Kode salah');
+        throw new UnauthorizedException(keepConsumed ? 'Terlalu banyak salah. Login ulang' : 'Kode salah');
       }
       await this.prisma.user.update({ where: { id: user.id }, data: { failedLogins: 0, lockedUntil: null } });
       return { ...(await this.issueTokens(user.id)), mustChangePassword: user.mustChangePassword };

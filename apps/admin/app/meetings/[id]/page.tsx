@@ -1,7 +1,7 @@
 'use client';
 import { use, useEffect, useState } from 'react';
 import { api } from '@/lib/client';
-import { Btn, Card, Empty, Err, PageHeader, StatusPill, Thead, field } from '@/lib/ui';
+import { Btn, Card, Empty, Err, Loading, PageHeader, StatusPill, Thead, field } from '@/lib/ui';
 
 export default function MeetingDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -10,6 +10,8 @@ export default function MeetingDetail({ params }: { params: Promise<{ id: string
   const [kors, setKors] = useState<any[]>([]);
   const [qr, setQr] = useState('');
   const [err, setErr] = useState('');
+  const [first, setFirst] = useState(true);
+  const [qrErr, setQrErr] = useState('');
   const [loc, setLoc] = useState({ latitude: '', longitude: '', radiusM: '' });
   const [sel, setSel] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -17,11 +19,13 @@ export default function MeetingDetail({ params }: { params: Promise<{ id: string
   const [adj, setAdj] = useState({ userId: '', status: 'PERMITTED', reason: '' });
   const load = () => {
     setErr('');
+    setQrErr('');
     // ponytail: limit 100 tanpa pagination (skala UKM). Ceiling: pager saat >100/rapat.
-    api<{ data: any[] }>(`meetings/${id}/attendance?limit=100`).then((r) => setAtt(r.data)).catch((e) => setErr(e.message));
-    api<{ data: any[] }>(`meetings/${id}/absence-requests?limit=100`).then((r) => setReqs(r.data)).catch((e) => setErr(e.message));
-    api<{ data: any[] }>(`meetings/${id}/corrections?limit=100`).then((r) => setKors(r.data)).catch((e) => setErr(e.message));
-    api<{ qr: string }>(`meetings/${id}/qr`).then((r) => setQr(r.qr)).catch(() => {});
+    const p1 = api<{ data: any[] }>(`meetings/${id}/attendance?limit=100`).then((r) => setAtt(r.data)).catch((e) => setErr(e.message));
+    const p2 = api<{ data: any[] }>(`meetings/${id}/absence-requests?limit=100`).then((r) => setReqs(r.data)).catch((e) => setErr(e.message));
+    const p3 = api<{ data: any[] }>(`meetings/${id}/corrections?limit=100`).then((r) => setKors(r.data)).catch((e) => setErr(e.message));
+    api<{ qr: string }>(`meetings/${id}/qr`).then((r) => setQr(r.qr)).catch(() => setQrErr('QR gagal dimuat'));
+    Promise.allSettled([p1, p2, p3]).then(() => setFirst(false));
   };
   useEffect(load, [id]);
 
@@ -107,16 +111,21 @@ export default function MeetingDetail({ params }: { params: Promise<{ id: string
         </span>}
       />
       <Err msg={err} />
+      {first ? (
+        <Card className="p-4"><Loading /></Card>
+      ) : (
+        <>
       {fails.length > 0 && (
         <Card className="p-4">
           <h2 className="mb-2 text-sm font-semibold text-rose-700">Gagal diproses ({fails.length})</h2>
           <ul className="list-disc pl-5 text-sm text-gray-600">
-            {fails.map((f: any) => <li key={f.id}>{reqs.find((r) => r.id === f.id)?.user?.name ?? f.id} — {f.reason}</li>)}
+            {fails.map((f: any) => <li key={f.id}>{reqs.find((r) => r.id === f.id)?.user?.name ?? f.id}: {f.reason}</li>)}
           </ul>
         </Card>
       )}
       <div className="flex flex-wrap gap-4">
         {qr && <Card className="p-3"><img src={qr} alt="QR presensi" className="h-32 w-32" /></Card>}
+        {qrErr && <Card className="p-3"><p className="text-xs text-rose-600">{qrErr}</p></Card>}
         <Card className="min-w-72 flex-1 p-4">
           <h2 className="mb-2 text-sm font-semibold">Batas Lokasi</h2>
           <form onSubmit={saveLoc} className="grid gap-2 md:grid-cols-4">
@@ -137,8 +146,8 @@ export default function MeetingDetail({ params }: { params: Promise<{ id: string
                 {reqs.map((r) => (
                   <tr key={r.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60">
                     <td className="py-2.5 pr-2">{r.status === 'PENDING' && <input type="checkbox" className="size-4 accent-[#134179]" checked={sel.includes(r.id)} onChange={(e) => setSel(e.target.checked ? [...sel, r.id] : sel.filter((x) => x !== r.id))} />}</td>
-                    <td className="py-2.5 pr-2 font-medium">{r.user?.name} <span className="font-normal text-gray-400">({r.user?.nim})</span></td>
-                    <td className="py-2.5 pr-2 text-gray-500">{r.reasonType} — {r.reasonDetail}</td>
+                    <td className="py-2.5 pr-2 font-medium">{r.user?.name} <span className="font-normal text-gray-500">({r.user?.nim})</span></td>
+                    <td className="py-2.5 pr-2 text-gray-500">{r.reasonType}: {r.reasonDetail}</td>
                     <td className="py-2.5 pr-2"><StatusPill value={r.status} /></td>
                     <td className="py-2.5">{r.status === 'PENDING' && (<span className="flex gap-3"><button className="font-medium text-emerald-700 hover:text-emerald-900" onClick={() => decide(r.id, 'approve')}>OK</button><button className="font-medium text-rose-600 hover:text-rose-800" onClick={() => decide(r.id, 'reject')}>Tolak</button></span>)}</td>
                   </tr>
@@ -198,6 +207,8 @@ export default function MeetingDetail({ params }: { params: Promise<{ id: string
           <Btn primary>Sesuaikan</Btn>
         </form>
       </Card>
+        </>
+      )}
     </div>
   );
 }

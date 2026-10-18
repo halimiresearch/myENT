@@ -55,13 +55,13 @@ class _PresensiPageState extends State<PresensiPage> {
     var p = await Geolocator.checkPermission();
     if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
     if (p == LocationPermission.denied) {
-      throw ApiException(400, 'Izin lokasi ditolak — aktifkan di pengaturan');
+      throw ApiException(400, 'Izin lokasi ditolak. Aktifkan di pengaturan');
     }
     if (p == LocationPermission.deniedForever) {
-      throw ApiException(400, 'Izin lokasi permanen ditolak — buka pengaturan aplikasi');
+      throw ApiException(400, 'Izin lokasi permanen ditolak. Buka pengaturan aplikasi');
     }
     final off = await Geolocator.isLocationServiceEnabled();
-    if (!off) throw ApiException(400, 'GPS mati — nyalakan lokasi dulu');
+    if (!off) throw ApiException(400, 'GPS mati. Nyalakan lokasi dulu');
     return Geolocator.getCurrentPosition().timeout(const Duration(seconds: 10));
   }
 

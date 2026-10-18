@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api, dl } from '@/lib/client';
-import { Btn, Card, Empty, Err, PageHeader, Pager, Thead, field } from '@/lib/ui';
+import { Btn, Card, Empty, Err, Loading, PageHeader, Pager, Thead, field } from '@/lib/ui';
 
 const COLS = ['name', 'present', 'permitted', 'sick', 'dispensation', 'absent', 'percentage'];
 const LIMIT = 20;
@@ -12,6 +12,7 @@ export default function Recap() {
   const [page, setPage] = useState(1);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [first, setFirst] = useState(true);
   const [q, setQ] = useState({ search: '', sortBy: 'name', order: 'asc', from: '', to: '' });
   const toISO = (s: string) => {
     if (!s) return undefined;
@@ -34,7 +35,7 @@ export default function Recap() {
         setPage(p);
       })
       .catch((e) => setErr(e.message))
-      .finally(() => setBusy(false));
+      .finally(() => { setBusy(false); setFirst(false); });
   };
   useEffect(() => {
     load(1);
@@ -73,7 +74,7 @@ export default function Recap() {
         </div>
       </Card>
       <Card className="p-4">
-        {rows.length === 0 ? <Empty /> : (
+        {first ? <Loading /> : rows.length === 0 ? <Empty /> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <Thead cols={['Nama', 'NIM', 'Hadir', 'Izin', 'Sakit', 'Disp', 'Alpha', '%']} />

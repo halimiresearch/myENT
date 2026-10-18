@@ -1,17 +1,18 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/client';
-import { Btn, Card, Err, PageHeader, field } from '@/lib/ui';
+import { Btn, Card, Err, Loading, PageHeader, field } from '@/lib/ui';
 
 export default function Config() {
   const [cfg, setCfg] = useState<Record<string, any>>({});
   const [key, setKey] = useState('');
   const [val, setVal] = useState('');
   const [err, setErr] = useState('');
+  const [first, setFirst] = useState(true);
   const load = () => api<Record<string, any>>('config').then((c) => {
     setCfg(c);
     setKey((k) => k || 'retention_selfie_months');
-  }).catch((e) => setErr(e.message));
+  }).catch((e) => setErr(e.message)).finally(() => setFirst(false));
   useEffect(() => {
     load();
   }, []);
@@ -38,6 +39,10 @@ export default function Config() {
     <div className="space-y-4">
       <PageHeader title="Konfigurasi" sub="Pengaturan global aplikasi" />
       <Err msg={err} />
+      {first ? (
+        <Card className="p-4"><Loading /></Card>
+      ) : (
+        <>
       {key === 'effective_statuses' && (
         <p className="rounded-xl border border-gold-400/60 bg-gold-100 p-3 text-sm text-gray-700">
           Perubahan status efektif berlaku pada seluruh histori rekap (PRD §15.8).
@@ -55,6 +60,8 @@ export default function Config() {
       <Card className="p-4">
         <pre className="overflow-auto text-xs text-gray-600">{JSON.stringify(cfg, null, 2)}</pre>
       </Card>
+        </>
+      )}
     </div>
   );
 }

@@ -192,7 +192,10 @@ export class UsersController {
     if (hashed.length) {
       await this.prisma.user.createMany({
         data: hashed.map(({ r, hash }) => ({
-          nim: r.nim, name: r.name, division: r.division, cohortYear: r.cohortYear, email: r.email ?? null,
+          nim: r.nim, name: r.name,
+          // Scope divisi (AGENTS §6): officer selalu ke divisinya sendiri, apa pun isi CSV.
+          division: req.user.role === 'ADMIN' ? r.division : req.user.division,
+          cohortYear: r.cohortYear, email: r.email ?? null,
           passwordHash: hash, role: 'MEMBER' as const, mustChangePassword: true,
         })),
         skipDuplicates: true, // balapan import konkuren: baris tabrakan dilewati, tak 500.

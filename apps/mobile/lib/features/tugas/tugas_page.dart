@@ -48,7 +48,7 @@ class _TugasPageState extends State<TugasPage>
       if (results[3] != null) barang = results[3];
       if (results[4] != null) pinjamku = results[4];
       // Semua gagal (bukan kosong): tampilkan, jangan daftar sunyi.
-      err = results.every((v) => v == null) ? 'Gagal memuat — tarik untuk coba lagi' : null;
+      err = results.every((v) => v == null) ? 'Gagal memuat. Tarik untuk coba lagi' : null;
     });
   }
 

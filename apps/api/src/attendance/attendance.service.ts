@@ -112,8 +112,8 @@ export class AttendanceService {
     const actorId = actor.id;
     const target = await this.prisma.user.findUnique({ where: { id: targetUserId }, select: { id: true, division: true } });
     if (!target) throw new NotFoundException('User tidak ditemukan');
-    if (actor.id !== target.id && !canManageMember(actor as any, target as any))
-      throw new ForbiddenException('Di luar divisi Anda');
+    if (actor.id === target.id) throw new ForbiddenException('Tidak boleh menyesuaikan kehadiran sendiri');
+    if (!canManageMember(actor as any, target as any)) throw new ForbiddenException('Di luar divisi Anda');
     const m = await this.prisma.meeting.findFirst({ where: { id: meetingId, deletedAt: null } });
     if (!m) throw new NotFoundException('Meeting tidak ditemukan');
     const now = new Date();

@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/client';
-import { Btn, Card, Empty, Err, PageHeader, Thead, field } from '@/lib/ui';
+import { Btn, Card, Empty, Err, Loading, PageHeader, Thead, field } from '@/lib/ui';
 
 export default function Announce() {
   const [rows, setRows] = useState<any[]>([]);
   const [err, setErr] = useState('');
+  const [first, setFirst] = useState(true);
   const [form, setForm] = useState({ title: '', body: '', division: '', cohort: '' });
-  const load = () => api<{ data: any[] }>('audit-logs?action=announcement.create&limit=20').then((r) => setRows(r.data)).catch((e) => setErr(e.message));
+  const load = () => api<{ data: any[] }>('audit-logs?action=announcement.create&limit=20').then((r) => setRows(r.data)).catch((e) => setErr(e.message)).finally(() => setFirst(false));
   useEffect(() => {
     load();
   }, []);
@@ -44,7 +45,7 @@ export default function Announce() {
       </Card>
       <Card className="p-4">
         <h2 className="mb-2 text-sm font-semibold">Terkirim</h2>
-        {rows.length === 0 ? <Empty /> : (
+        {first ? <Loading /> : rows.length === 0 ? <Empty /> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[480px] text-sm">
               <Thead cols={['Waktu', 'Judul', 'Penerima']} />

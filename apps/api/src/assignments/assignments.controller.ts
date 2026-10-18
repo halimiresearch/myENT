@@ -64,7 +64,7 @@ export class AssignmentsController {
   @Roles('OFFICER', 'ADMIN')
   @Patch('submissions/:id/review')
   review(@Req() req: any, @Param('id', ParseUUIDPipe) id: string, @Body() dto: ReviewDto) {
-    return this.assignments.review(req.user.id, id, dto.reviewNote ?? '');
+    return this.assignments.review(req.user, id, dto.reviewNote ?? '');
   }
 
   @Roles('MEMBER', 'OFFICER', 'ADMIN')

@@ -85,7 +85,7 @@ export default function AuditLogs() {
                 {rows.map((a) => (
                   <tr key={a.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60">
                     <td className="py-2.5 pr-2 text-gray-500">{new Date(a.createdAt).toLocaleString('id-ID')}</td>
-                    <td className="py-2.5 pr-2 font-medium">{a.actor?.name ?? ''} <span className="font-normal text-gray-400">({a.actor?.nim ?? a.actorId ?? 'sistem'})</span></td>
+                    <td className="py-2.5 pr-2 font-medium">{a.actor?.name ?? ''} <span className="font-normal text-gray-500">({a.actor?.nim ?? a.actorId ?? 'sistem'})</span></td>
                     <td className="py-2.5 pr-2 font-medium">{a.action}</td>
                     <td className="py-2.5 pr-2 text-gray-500" title={a.entityId}>{a.entity}/{String(a.entityId).slice(0, 8)}</td>
                     <td className="py-2.5 pr-2 text-gray-500">{diff(a)}</td>

@@ -20,7 +20,7 @@ export function assertSelfWindow(
   if (!['PUBLISHED', 'ONGOING'].includes(m.status)) throw new BadRequestException('Presensi belum/tidak dibuka');
   if (now < m.attendanceOpenAt) throw new BadRequestException('Presensi belum dibuka');
   if (now > m.attendanceCloseAt)
-    throw new BadRequestException('Presensi sudah ditutup — hubungi pengurus');
+    throw new BadRequestException('Presensi sudah ditutup. Hubungi pengurus');
 }
 
 export function selfieKey(now = new Date(), uuid: string) {

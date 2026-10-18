@@ -88,23 +88,23 @@ export default function Dashboard() {
       <div className="grid gap-4 xl:grid-cols-3">
         <Card className="p-4 xl:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold">Perlu Perhatian — Sering Alpha</h2>
+            <h2 className="text-sm font-semibold">Perlu Perhatian: Sering Alpha</h2>
             <label className="relative block w-full sm:w-64">
-              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
+              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="size-4" aria-hidden><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
               </span>
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Cari nama atau NIM…"
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none placeholder:text-gray-400 focus:border-brand-200 focus:bg-white focus:ring-2 focus:ring-brand-100"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none placeholder:text-gray-500 focus:border-brand-200 focus:bg-white focus:ring-2 focus:ring-brand-100"
               />
             </label>
           </div>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
-                <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-400">
+                <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-500">
                   <th className="py-2 pr-2 font-medium">Anggota</th>
                   <th className="py-2 pr-2 font-medium">Divisi</th>
                   <th className="py-2 pr-2 font-medium">Alpha</th>
@@ -119,7 +119,7 @@ export default function Dashboard() {
                         <Avatar name={a.user?.name ?? '?'} />
                         <span className="leading-tight">
                           <span className="block font-medium">{a.user?.name}</span>
-                          <span className="block text-xs text-gray-400">{a.user?.nim}</span>
+                          <span className="block text-xs text-gray-500">{a.user?.nim}</span>
                         </span>
                       </span>
                     </td>

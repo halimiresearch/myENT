@@ -1,12 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/client';
-import { Btn, Card, Empty, Err, PageHeader, StatusPill, Thead, field } from '@/lib/ui';
+import { Btn, Card, Empty, Err, Loading, PageHeader, StatusPill, Thead, field } from '@/lib/ui';
 
 export default function Inventory() {
   const [items, setItems] = useState<any[]>([]);
   const [loans, setLoans] = useState<any[]>([]);
   const [err, setErr] = useState('');
+  const [first, setFirst] = useState(true);
   const [form, setForm] = useState({ name: '', code: '', category: '' });
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -15,12 +16,13 @@ export default function Inventory() {
   const [ret, setRet] = useState<{ id: string; damaged: boolean; note: string } | null>(null);
   const [hist, setHist] = useState<any[]>([]);
   const load = () => {
-    api<any[]>('items').then(setItems).catch((e) => setErr(e.message));
+    const p1 = api<any[]>('items').then(setItems).catch((e) => setErr(e.message));
     const q = [`page=${page}`, `limit=${LIMIT}`, ...(filter ? [`status=${filter}`] : [])].join('&');
-    api<any>(`loans?${q}`).then((r) => {
+    const p2 = api<any>(`loans?${q}`).then((r) => {
       setLoans(Array.isArray(r) ? r : r.data ?? []);
       setTotal(Array.isArray(r) ? r.length : r.total ?? 0);
     }).catch((e) => setErr(e.message));
+    Promise.allSettled([p1, p2]).then(() => setFirst(false));
   };
   useEffect(load, []);
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function Inventory() {
       </Card>
       <Card className="p-4">
         <h2 className="mb-2 text-sm font-semibold">Barang</h2>
-        {items.length === 0 ? <Empty /> : (
+        {first ? <Loading /> : items.length === 0 ? <Empty /> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <Thead cols={['Kode', 'Nama', 'Kondisi', 'Status', '']} />
@@ -82,7 +84,7 @@ export default function Inventory() {
                     <td className="py-2.5 pr-2">{it.name}</td>
                     <td className="py-2.5 pr-2">{it.condition}</td>
                     <td className="py-2.5 pr-2"><StatusPill value={it.status} /></td>
-                    <td className="py-2.5"><button className="font-medium text-brand-700 hover:text-brand-800" onClick={async () => { const r = await api<{ data: any[] }>(`items/${it.id}/history?limit=20`); setHist(r.data); }}>Riwayat</button></td>
+                    <td className="py-2.5"><button className="font-medium text-brand-700 hover:text-brand-800" onClick={async () => { try { const r = await api<{ data: any[] }>(`items/${it.id}/history?limit=20`); setHist(r.data); } catch (e: any) { setErr(e.message); } }}>Riwayat</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -129,7 +131,7 @@ export default function Inventory() {
             </div>
           </form>
         )}
-        {loans.length === 0 ? <Empty text="Belum ada pinjaman" /> : (
+        {first ? <Loading /> : loans.length === 0 ? <Empty text="Belum ada pinjaman" /> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <Thead cols={['Barang', 'Peminjam', 'Tenggat', 'Status', 'Aksi']} />
@@ -137,7 +139,7 @@ export default function Inventory() {
                 {loans.map((l) => (
                   <tr key={l.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60">
                     <td className="py-2.5 pr-2 font-medium">{l.item?.code}</td>
-                    <td className="py-2.5 pr-2">{l.snapName} <span className="text-gray-400">({l.snapNim})</span></td>
+                    <td className="py-2.5 pr-2">{l.snapName} <span className="text-gray-500">({l.snapNim})</span></td>
                     <td className="py-2.5 pr-2 text-gray-500">{new Date(l.dueAt).toLocaleDateString('id-ID')}</td>
                     <td className="py-2.5 pr-2"><StatusPill value={l.status} /></td>
                     <td className="py-2.5">

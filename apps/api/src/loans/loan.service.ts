@@ -118,10 +118,15 @@ export class LoanService {
     }
   }
 
-  async returnLoan(actorId: string, id: string, photo: Buffer, noteIn: string, damaged: boolean) {
+  async returnLoan(actor: { id: string; role: string; division: string }, id: string, photo: Buffer, noteIn: string, damaged: boolean) {
     const loan = await this.prisma.loan.findUnique({ where: { id } });
     if (!loan) throw new NotFoundException('Tidak ditemukan');
     if (!['ACTIVE', 'OVERDUE'].includes(loan.status)) throw new BadRequestException('Sudah selesai');
+    // Scope divisi (AGENTS §6): OFFICER hanya pinjaman anggota divisinya; peminjam sendiri boleh.
+    if (loan.borrowerId !== actor.id) {
+      const target = await this.prisma.user.findUnique({ where: { id: loan.borrowerId }, select: { id: true, division: true } });
+      if (!target || !canManageMember(actor as any, target)) throw new ForbiddenException('Di luar divisi Anda');
+    }
     const clean = await this.cleanPhoto(photo);
     const key = this.photoKey(loan.itemId);
     await this.storage.save(key, clean, 'image/jpeg');
@@ -134,10 +139,10 @@ export class LoanService {
         });
         await tx.item.update({ where: { id: loan.itemId }, data: { status: damaged ? 'MAINTENANCE' : 'AVAILABLE' } });
         await this.audit.log({
-          actorId, action: 'loan.return', entity: 'Loan', entityId: id,
+          actorId: actor.id, action: 'loan.return', entity: 'Loan', entityId: id,
           oldValue: { status: loan.status } as any, newValue: { status: 'RETURNED', damaged } as any,
         }, tx);
-        await this.hist(loan.itemId, actorId, damaged ? 'damaged' : 'returned', loan.status, damaged ? 'MAINTENANCE' : 'AVAILABLE', noteIn, tx);
+        await this.hist(loan.itemId, actor.id, damaged ? 'damaged' : 'returned', loan.status, damaged ? 'MAINTENANCE' : 'AVAILABLE', noteIn, tx);
         return l;
       });
     } catch (e) {

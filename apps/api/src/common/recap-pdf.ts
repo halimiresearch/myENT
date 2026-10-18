@@ -25,7 +25,7 @@ export function recapPdf(r: {
     doc.text(`Kehadiran: ${r.percentage ?? '–'}${r.percentage !== null ? '%' : ''} dari ${r.counted} kegiatan`);
     doc.moveDown().fontSize(12).text('Riwayat');
     doc.fontSize(9);
-    for (const h of r.history.slice(0, 200)) doc.text(`${h.date} — ${h.title} — ${h.status}`);
+    for (const h of r.history.slice(0, 200)) doc.text(`${h.date} · ${h.title} · ${h.status}`);
     doc.text(`\nDibuat ${new Date().toISOString()}`, 40, doc.page.height - 60);
     doc.end();
   });

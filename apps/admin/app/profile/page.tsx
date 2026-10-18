@@ -11,10 +11,12 @@ export default function Profile() {
   const [otpUrl, setOtpUrl] = useState('');
   const [setupPw, setSetupPw] = useState('');
   const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
 
   async function ganti(e: React.FormEvent) {
     e.preventDefault();
     setMsg('');
+    setBusy(true);
     try {
       await api('auth/change-password', { method: 'POST', body: JSON.stringify({ oldPassword: oldP, newPassword: newP }) });
       setOldP('');
@@ -22,6 +24,8 @@ export default function Profile() {
       setMsg('Password diganti.');
     } catch (e: any) {
       setMsg(e.message ?? 'Gagal');
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -43,7 +47,7 @@ export default function Profile() {
         <form onSubmit={ganti} className="grid gap-2">
           <input className={field} type="password" placeholder="Password lama" value={oldP} onChange={(e) => setOldP(e.target.value)} required />
           <input className={field} type="password" placeholder="Password baru (min 10)" value={newP} onChange={(e) => setNewP(e.target.value)} required minLength={10} />
-          <Btn primary>Ganti password</Btn>
+          <Btn primary disabled={busy}>Ganti password</Btn>
         </form>
       </Card>
       <Card className="p-4">
@@ -53,6 +57,7 @@ export default function Profile() {
             className="grid gap-2"
             onSubmit={async (e) => {
               e.preventDefault();
+              setBusy(true);
               try {
                 const r = await api<{ secret: string; otpauthUrl: string }>('auth/2fa/setup', { method: 'POST', body: JSON.stringify({ password: setupPw }) });
                 setSecret(r.secret);
@@ -60,11 +65,13 @@ export default function Profile() {
                 setMsg('');
               } catch (e: any) {
                 setMsg(e.message);
+              } finally {
+                setBusy(false);
               }
             }}
           >
             <input className={field} type="password" placeholder="Password saat ini" aria-label="Password saat ini" value={setupPw} onChange={(e) => setSetupPw(e.target.value)} required />
-            <Btn>Mulai setup 2FA</Btn>
+            <Btn disabled={busy}>Mulai setup 2FA</Btn>
           </form>
         ) : (
           <div className="grid gap-2">

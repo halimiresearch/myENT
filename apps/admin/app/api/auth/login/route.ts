@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   if (!originOk(req)) return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
   const ip = clientIp(req);
   // Backend sudah lockout per-akun; ini lapis per-IP (Turnstile tetap wajib).
-  if (rateLimited(`login:${ip}`, 20, 10 * 60_1000))
+  if (rateLimited(`login:${ip}`, 20, 10 * 60_000))
     return NextResponse.json({ message: 'Terlalu banyak percobaan, coba lagi nanti' }, { status: 429 });
   const body = await req.json();
   if (!(await turnstileOk(body['cf-turnstile-response'], ip)))

@@ -161,7 +161,7 @@ export class MeetingsService {
     if (!m) throw new NotFoundException('Meeting tidak ditemukan');
     const attCount = await this.prisma.attendance.count({ where: { meetingId: id } });
     if (attCount > 0)
-      throw new ForbiddenException('Meeting sudah memiliki attendance — batalkan via status CANCELLED, bukan delete');
+      throw new ForbiddenException('Meeting sudah memiliki attendance. Batalkan via status CANCELLED, bukan delete');
     const updated = await this.prisma.$transaction(async (tx: any) => {
       const u = await tx.meeting.update({ where: { id }, data: { deletedAt: new Date() } });
       await this.audit.log({ actorId, action: 'meeting.delete', entity: 'Meeting', entityId: id }, tx);
@@ -174,7 +174,7 @@ export class MeetingsService {
   async qrFor(id: string) {
     const m = await this.prisma.meeting.findFirst({ where: { id, deletedAt: null } });
     if (!m) throw new NotFoundException('Meeting tidak ditemukan');
-    const exp = Date.now() + 5 * 60_1000;
+    const exp = Date.now() + 5 * 60_000;
     const { signQr } = await import('./qr.rules');
     const QRCode = (await import('qrcode')).default;
     const token = signQr(id, exp, requireQrSecret());
@@ -259,7 +259,7 @@ export class MeetingsService {
         });
         if (claimed.count) notify.push({ type: 'attendance-opened', title: m.title });
       }
-      const closingAt = new Date(now.getTime() + 30 * 60_1000);
+      const closingAt = new Date(now.getTime() + 30 * 60_000);
       const closing = await tx.meeting.findMany({
         where: {
           status: { in: ['PUBLISHED', 'ONGOING'] }, deletedAt: null, notifClosingSentAt: null,

@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/client';
-import { Avatar, Card, Empty, Err, PageHeader, Thead } from '@/lib/ui';
+import { Avatar, Card, Empty, Err, Loading, PageHeader, Thead } from '@/lib/ui';
 
 export default function Analytics() {
   const [trends, setTrends] = useState<any>({ data: [] });
   const [abs, setAbs] = useState<any[]>([]);
   const [div, setDiv] = useState<any[]>([]);
   const [err, setErr] = useState('');
+  const [done, setDone] = useState(false);
   useEffect(() => {
     Promise.all([
       api<any>('analytics/trends?months=6'),
@@ -19,17 +20,19 @@ export default function Analytics() {
         setAbs(a);
         setDiv(d);
       })
-      .catch((e) => setErr(e.message ?? 'Gagal memuat'));
+      .catch((e) => setErr(e.message ?? 'Gagal memuat'))
+      .finally(() => setDone(true));
   }, []);
 
   if (err) return <div><PageHeader title="Analitik" /><Err msg={err} /></div>;
-  if (!trends.data?.length && !abs.length && !div.length) return <p className="text-sm text-gray-500">Memuat…</p>;
+  if (!done) return <div className="space-y-4"><PageHeader title="Analitik" /><Card className="p-4"><Loading /></Card></div>;
 
   return (
     <div className="space-y-4">
       <PageHeader title="Analitik" sub={`Tren kehadiran 6 bulan terakhir${trends.truncated ? ' (terpotong)' : ''}`} />
       <Card className="p-4">
         <h2 className="mb-2 text-sm font-semibold">Tren Bulanan</h2>
+        {(trends.data ?? []).length === 0 ? <Empty /> : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-sm">
             <Thead cols={['Bulan', 'Total', 'Efektif', '%']} />
@@ -45,6 +48,7 @@ export default function Analytics() {
             </tbody>
           </table>
         </div>
+        )}
       </Card>
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="p-4">
@@ -56,7 +60,7 @@ export default function Analytics() {
                   <Avatar name={a.user?.name ?? '?'} />
                   <span className="min-w-0 flex-1 leading-tight">
                     <span className="block truncate font-medium">{a.user?.name}</span>
-                    <span className="block text-xs text-gray-400">{a.user?.nim} · {a.user?.division || '–'}</span>
+                    <span className="block text-xs text-gray-500">{a.user?.nim} · {a.user?.division || '–'}</span>
                   </span>
                   <span className="text-sm font-bold text-rose-600">{a.alphas}×</span>
                 </li>
@@ -94,15 +98,22 @@ export default function Analytics() {
 
 function Points() {
   const [rows, setRows] = useState<any[]>([]);
+  const [err, setErr] = useState('');
+  const [first, setFirst] = useState(true);
   useEffect(() => {
-    api<any[]>('points/leaderboard').then(setRows);
+    api<any[]>('points/leaderboard')
+      .then(setRows)
+      .catch((e) => setErr(e.message ?? 'Gagal memuat'))
+      .finally(() => setFirst(false));
   }, []);
+  if (first) return <Loading />;
+  if (err) return <Err msg={err} />;
   if (!rows.length) return <Empty />;
   return (
     <ul className="divide-y divide-gray-50">
       {rows.map((r: any, i: number) => (
         <li key={r.user.id} className="flex items-center gap-2.5 py-2">
-          <span className={`grid size-6 shrink-0 place-items-center rounded-lg text-xs font-bold ${i < 3 ? 'bg-gold-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{i + 1}</span>
+          <span className={`grid size-6 shrink-0 place-items-center rounded-lg text-xs font-bold ${i < 3 ? 'bg-gold-100 text-yellow-800' : 'bg-gray-100 text-gray-500'}`}>{i + 1}</span>
           <span className="min-w-0 flex-1 truncate font-medium">{r.user.name}</span>
           <span className="text-sm font-bold">{r.points}</span>
         </li>

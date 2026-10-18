@@ -5,9 +5,12 @@ import { Btn, Card, Err, PageHeader, field } from '@/lib/ui';
 
 export default function Duty() {
   const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ startDate: '', days: '7', perDay: '1', division: '' });
   const gen = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErr('');
+    setBusy(true);
     try {
       const r = await api<{ meetings: number }>('duty/roster', {
         method: 'POST',
@@ -21,6 +24,8 @@ export default function Duty() {
       alert(`${r.meetings} kegiatan piket (DRAFT) dibuat`);
     } catch (e: any) {
       setErr(e.message);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -34,9 +39,9 @@ export default function Duty() {
           <input type="number" min={1} max={90} className={field} placeholder="Hari" value={form.days} onChange={(e) => setForm({ ...form, days: e.target.value })} />
           <input type="number" min={1} max={5} className={field} placeholder="Orang/hari" value={form.perDay} onChange={(e) => setForm({ ...form, perDay: e.target.value })} />
           <input className={field} placeholder="Divisi (kosong = semua)" value={form.division} onChange={(e) => setForm({ ...form, division: e.target.value })} />
-          <Btn primary>Generate roster</Btn>
+          <Btn primary disabled={busy}>{busy ? 'Memproses…' : 'Generate roster'}</Btn>
         </form>
-        <p className="mt-3 text-sm text-gray-500">Roster menghasilkan kegiatan DRAFT — publish dari halaman Kegiatan. Presensi + rekap reuse alur biasa (rekap % mengecualikan piket).</p>
+        <p className="mt-3 text-sm text-gray-500">Roster menghasilkan kegiatan DRAFT. Publish dari halaman Kegiatan. Presensi + rekap reuse alur biasa (rekap % mengecualikan piket).</p>
       </Card>
     </div>
   );

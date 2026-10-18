@@ -99,7 +99,7 @@ export class LoanController {
     @Body() body: ReturnDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.loans.returnLoan(req.user.id, id, file?.buffer ?? Buffer.alloc(0), body.noteIn ?? '', body.damaged === true || (body as any).damaged === 'true');
+    return this.loans.returnLoan(req.user, id, file?.buffer ?? Buffer.alloc(0), body.noteIn ?? '', body.damaged === true || (body as any).damaged === 'true');
   }
 
   @Roles('MEMBER', 'OFFICER', 'ADMIN')

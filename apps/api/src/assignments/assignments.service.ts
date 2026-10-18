@@ -1,4 +1,4 @@
-import { BadRequestException, GoneException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, GoneException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -146,13 +146,17 @@ export class AssignmentsService {
     };
   }
 
-  async review(actorId: string, id: string, reviewNote: string) {
-    const s = await this.prisma.submission.findUnique({ where: { id } });
+  async review(actor: { id: string; role: string; division: string }, id: string, reviewNote: string) {
+    const s = await this.prisma.submission.findUnique({
+      where: { id },
+      include: { user: { select: { id: true, division: true } } },
+    });
     if (!s) throw new NotFoundException('Tidak ditemukan');
+    if (!canManageMember(actor as any, s.user as any)) throw new ForbiddenException('Di luar divisi Anda');
     return this.prisma.$transaction(async (tx: any) => {
       const u = await tx.submission.update({ where: { id }, data: { reviewedAt: new Date(), reviewNote: reviewNote ?? '' } });
       await this.audit.log({
-        actorId, action: 'submission.review', entity: 'Submission', entityId: id,
+        actorId: actor.id, action: 'submission.review', entity: 'Submission', entityId: id,
         oldValue: { reviewedAt: s.reviewedAt } as any, newValue: { reviewedAt: u.reviewedAt } as any,
       }, tx);
       return u;

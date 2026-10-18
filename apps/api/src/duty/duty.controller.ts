@@ -24,7 +24,7 @@ export class DutyController {
   @Roles('OFFICER', 'ADMIN')
   @Post('duty/roster')
   roster(@Req() req: any, @Body() dto: RosterDto) {
-    return this.duty.generate(req.user.id, dto);
+    return this.duty.generate(req.user, dto);
   }
 
   @Roles('MEMBER', 'OFFICER', 'ADMIN')

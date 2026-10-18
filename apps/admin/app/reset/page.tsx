@@ -32,7 +32,7 @@ function ResetForm() {
     }
   }
 
-  const input = 'w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm outline-none placeholder:text-gray-400 focus:border-brand-200 focus:ring-2 focus:ring-brand-100';
+  const input = 'w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm outline-none placeholder:text-gray-500 focus:border-brand-200 focus:ring-2 focus:ring-brand-100';
 
   return (
     <div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-xl">
@@ -43,7 +43,7 @@ function ResetForm() {
       <p className="mt-1 text-sm text-gray-500">Tautan berlaku 1 jam dan sekali pakai.</p>
       <div className="mt-5"><Err msg={err} /></div>
       {!token ? (
-        <p className="text-sm text-gray-500">Tautan tidak lengkap — buka lagi dari email terbarumu.</p>
+        <p className="text-sm text-gray-500">Tautan tidak lengkap. Buka lagi dari email terbarumu.</p>
       ) : done ? (
         <div>
           <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700 ring-1 ring-inset ring-emerald-200">Password berhasil diganti. Silakan masuk.</p>

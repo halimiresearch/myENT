@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/client';
-import { Avatar, Btn, Card, Empty, Err, PageHeader, Pager, StatusPill, Thead, field } from '@/lib/ui';
+import { Avatar, Btn, Card, Empty, Err, Loading, PageHeader, Pager, StatusPill, Thead, field } from '@/lib/ui';
 
 const LIMIT = 20;
 
@@ -10,6 +10,7 @@ export default function Members() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [err, setErr] = useState('');
+  const [first, setFirst] = useState(true);
   const [q, setQ] = useState('');
   const [form, setForm] = useState({ nim: '', name: '', email: '', password: '', role: 'MEMBER' });
   const [temp, setTemp] = useState<{ name: string; pass: string } | null>(null);
@@ -21,7 +22,8 @@ export default function Members() {
         setTotal(r.total);
         setPage(p);
       })
-      .catch((e) => setErr(e.message));
+      .catch((e) => setErr(e.message))
+      .finally(() => setFirst(false));
   };
   useEffect(() => {
     load();
@@ -66,7 +68,7 @@ export default function Members() {
       const text = await f.text();
       const r = await api<{ results: any[] }>('users/import', { method: 'POST', body: JSON.stringify({ csv: text }) });
       const ok = r.results.filter((x: any) => x.status === 'ok').length;
-      setErr(`Import: ${ok}/${r.results.length} ok${ok < r.results.length ? ' — lihat konsol' : ''}`);
+      setErr(`Import: ${ok}/${r.results.length} ok${ok < r.results.length ? ' (lihat konsol)' : ''}`);
       console.log(r.results.filter((x: any) => x.status !== 'ok'));
       load(1);
     } catch (er: any) {
@@ -107,7 +109,7 @@ export default function Members() {
         </form>
       </Card>
       <Card className="p-4">
-        {rows.length === 0 ? <Empty /> : (
+        {first ? <Loading /> : rows.length === 0 ? <Empty /> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <Thead cols={['Anggota', 'Role', 'Status', 'Aksi']} />
@@ -119,7 +121,7 @@ export default function Members() {
                         <Avatar name={u.name} />
                         <span className="leading-tight">
                           <span className="block font-medium">{u.name}</span>
-                          <span className="block text-xs text-gray-400">{u.nim}{u.email ? ` · ${u.email}` : ''}</span>
+                          <span className="block text-xs text-gray-500">{u.nim}{u.email ? ` · ${u.email}` : ''}</span>
                         </span>
                       </span>
                     </td>

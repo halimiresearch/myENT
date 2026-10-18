@@ -6,7 +6,7 @@ import { clientIp, rateLimited } from '@/lib/ratelimit';
 export async function POST(req: NextRequest) {
   if (!originOk(req)) return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
   // Kode 6 digit mudah di-brute-force; backend juga lockout per-akun (verify2fa).
-  if (rateLimited(`2fa:${clientIp(req)}`, 10, 10 * 60_1000))
+  if (rateLimited(`2fa:${clientIp(req)}`, 10, 10 * 60_000))
     return NextResponse.json({ message: 'Terlalu banyak percobaan, coba lagi nanti' }, { status: 429 });
   const body = await req.json();
   const r = await fetch(`${API}/auth/2fa/verify`, {

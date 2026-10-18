@@ -29,7 +29,7 @@ export class CorrectionService {
     if (!m || m.status === 'DRAFT') throw new NotFoundException('Meeting tidak ditemukan');
     const now = new Date();
     if (now <= m.attendanceCloseAt)
-      throw new BadRequestException('Window masih terbuka — presensi langsung saja');
+      throw new BadRequestException('Window masih terbuka. Presensi langsung saja');
     // P2-01: klaim kedaluwarsa N hari setelah window tutup — jangan berbulan-bulan.
     const windowDays = await this.config.get<number>('correction_window_days');
     if (now.getTime() > m.attendanceCloseAt.getTime() + windowDays * 86400_000)
